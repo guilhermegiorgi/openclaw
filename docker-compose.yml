@@ -7,20 +7,39 @@ services:
     environment:
       HOME: /home/node
       TERM: xterm-256color
+
+      # Obrigatório (auth do gateway)
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
-      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY}
-      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY}
-      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE}
+
+      # Opcional
+      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
+      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
+      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
+
+    # Use o volume do EasyPanel (bind mount) para persistir config e workspace
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
       - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
-    ports:
-      - "${OPENCLAW_GATEWAY_PORT:-18789}:18789"
-      - "${OPENCLAW_BRIDGE_PORT:-18790}:18790"
+
+    # IMPORTANTE:
+    # Para "100% VPS" com domínio/HTTPS via proxy do EasyPanel,
+    # NÃO publique portas aqui. O proxy acessa pela rede Docker.
+    # (Se quiser testar sem proxy, descomente temporariamente a linha 18789)
+    # ports:
+    #   - "18789:18789"
+
+    expose:
+      - "18789"
+      - "18790"
+
     init: true
     restart: unless-stopped
     command:
-      ["node","dist/index.js","gateway","--bind","${OPENCLAW_GATEWAY_BIND:-loopback}","--port","${OPENCLAW_GATEWAY_PORT:-18789}"]
+      [
+        "node","dist/index.js","gateway",
+        "--bind","${OPENCLAW_GATEWAY_BIND:-lan}",
+        "--port","18789"
+      ]
 
   openclaw-cli:
     build:
@@ -31,12 +50,16 @@ services:
       HOME: /home/node
       TERM: xterm-256color
       BROWSER: echo
-      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY}
-      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY}
-      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE}
+
+      # Opcional
+      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
+      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
+      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
+
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
       - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
+
     stdin_open: true
     tty: true
     init: true
