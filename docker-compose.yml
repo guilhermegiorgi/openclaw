@@ -16,17 +16,14 @@ services:
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
 
-    # Use o volume do EasyPanel (bind mount) para persistir config e workspace
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
       - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
 
-    # IMPORTANTE:
-    # Para "100% VPS" com domínio/HTTPS via proxy do EasyPanel,
-    # NÃO publique portas aqui. O proxy acessa pela rede Docker.
-    # (Se quiser testar sem proxy, descomente temporariamente a linha 18789)
-    # ports:
-    #   - "18789:18789"
+    # Publicar só no localhost (não expõe internet)
+    # Para Traefik em Swarm alcançar via host network
+    ports:
+      - "127.0.0.1:18789:18789"
 
     expose:
       - "18789"
